@@ -20,9 +20,13 @@
 #include <curl/curl.h>
 #include "webcfg_log.h"
 #include "webcfg.h"
-
+#ifndef BUILD_TESTING
 #define WEBPA_READ_HEADER             "/etc/parodus/parodus_read_file.sh"
 #define WEBPA_CREATE_HEADER           "/etc/parodus/parodus_create_file.sh"
+#else
+#define WEBPA_READ_HEADER             "/tmp/parodus_read_file.sh"
+#define WEBPA_CREATE_HEADER           "/tmp/parodus_create_file.sh"
+#endif
 #define TOKEN_SIZE                    4096
 
 void getAuthToken();

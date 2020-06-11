@@ -17,6 +17,7 @@
 #include <stdint.h>
 #include <errno.h>
 #include <stdio.h>
+#include <getopt.h>
 #include <CUnit/Basic.h>
 #include "../src/webcfg_param.h"
 #include "../src/webcfg.h"
@@ -34,12 +35,11 @@
 #define UNUSED(x) (void )(x)
 
 char *url = NULL;
-char *interface = NULL;
+char webpa_token[4096]={'\0'};
 char device_mac[32] = {'\0'};
-
+WDMP_STATUS globalStatus = WDMP_FAILURE;
 char* get_deviceMAC()
 {
-	strcpy(device_mac, "b42xxxxxxxxx");
 	return device_mac;
 }
 void setValues(const param_t paramVal[], const unsigned int paramCount, const int setType, char *transactionId, money_trace_spans *timeSpan, WDMP_STATUS *retStatus, int *ccspStatus)
@@ -49,7 +49,7 @@ void setValues(const param_t paramVal[], const unsigned int paramCount, const in
 	UNUSED(setType);
 	UNUSED(transactionId);
 	UNUSED(timeSpan);
-	UNUSED(retStatus);
+	*retStatus = globalStatus;
 	UNUSED(ccspStatus);
 	return;
 }
@@ -120,16 +120,15 @@ char *get_global_systemReadyTime()
 
 int Get_Webconfig_URL( char *pString)
 {
-	char *webConfigURL =NULL;
-	loadInitURLFromFile(&webConfigURL);
-	pString = webConfigURL;
-        printf("The value of pString is %s\n",pString);
+	strcpy(pString,url);
+    printf("The value of pString is %s\n",pString);
 	return 0;
 }
 
 int Set_Webconfig_URL( char *pString)
 {
 	printf("Set_Webconfig_URL pString %s\n", pString);
+	url = strdup(pString);
 	return 0;
 }
 
@@ -139,15 +138,112 @@ int registerWebcfgEvent(WebConfigEventCallback webcfgEventCB)
 	return 0;
 }
 
+void createNewAuthToken(char *newToken, size_t len, char *hw_mac, char* hw_serial_number)
+{
+	UNUSED(newToken);
+	UNUSED(len);
+	UNUSED(hw_mac);
+	UNUSED(hw_serial_number);
+}
+
+void getAuthToken()
+{
+}
+
+char* get_global_auth_token()
+{
+    return webpa_token;
+}
+
+char* get_global_serialNum()
+{
+    return strdup("E1234B");
+}
+
+int parse_commandline_arguments(int argc, char **argv)
+{
+	if(argc < 5)
+	{
+		fprintf(stderr,"Usage: %s --url=<url> --mac=<mac> --token-path=<token-path> --interface=<interface>\n\n", argv[0]);
+		return 0;
+	}
+
+	static const struct option long_options[] = {
+        {"url",      required_argument, 0, 'u'},
+        {"mac",      required_argument, 0, 'm'},
+		{"token-path",      required_argument, 0, 't'},
+		{"interface",      required_argument, 0, 'i'},
+        {0, 0, 0, 0}
+    };
+	int c;
+	optind = 1;
+	char buf[128] = {'\0'};
+	while (1)
+	{
+		/* getopt_long stores the option index here. */
+		int option_index = 0;
+		c = getopt_long (argc, argv, "u:m:i:t",
+		long_options, &option_index);
+
+		/* Detect the end of the options. */
+		if (c == -1)
+			break;
+
+		switch (c)
+		{
+			case 'u':
+				url = strdup(optarg);
+			break;
+			case 'm':
+				strncpy(device_mac, optarg, sizeof(device_mac)-1);
+			break;
+			case 't':
+			{
+				int len = 0;
+				char *token = NULL;
+				readFromFile(optarg, &token, &len);
+				strncpy(webpa_token, token, sizeof(webpa_token)-1);
+				WEBCFG_FREE(token);
+			}
+			break;
+			case 'i':
+				snprintf(buf,sizeof(buf),"WEBCONFIG_INTERFACE=%s ",optarg);
+				writeToDBFile(DEVICE_PROPS_FILE, buf, strlen(buf));
+			break;
+			case '?':
+			/* getopt_long already printed an error message. */
+			break;
+
+			default:
+				printf("Enter Valid arguments..\n");
+			return -1;
+		}
+	}
+	return 1;
+}
 void test_multipart()
 {
 	unsigned long status = 0;
+	globalStatus = WDMP_SUCCESS;
+	initWebConfigNotifyTask();
+	processWebcfgEvents();
+	initEventHandlingTask();
+	processWebconfgSync(status);
+}
 
-	if(url == NULL)
-	{
-		printf("\nProvide config URL as argument\n");
-		return;
-	}
+void test_multipart1()
+{
+	unsigned long status = 0;
+	globalStatus = WDMP_FAILURE;
+	initWebConfigNotifyTask();
+	processWebcfgEvents();
+	initEventHandlingTask();
+	processWebconfgSync(status);
+}
+void err_multipart()
+{
+	unsigned long status = 0;
+	url = "";
 	initWebConfigNotifyTask();
 	processWebcfgEvents();
 	initEventHandlingTask();
@@ -156,8 +252,10 @@ void test_multipart()
 
 void add_suites( CU_pSuite *suite )
 {
-    *suite = CU_add_suite( "tests", NULL, NULL );
-    CU_add_test( *suite, "Full", test_multipart);
+	*suite = CU_add_suite( "tests", NULL, NULL );
+	CU_add_test( *suite, "WebConfig sync with successful SET\n", test_multipart);
+	CU_add_test( *suite, "WebConfig sync with failed SET\n", test_multipart1);
+	CU_add_test( *suite, "WebConfig sync\n", err_multipart);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -165,26 +263,12 @@ void add_suites( CU_pSuite *suite )
 /*----------------------------------------------------------------------------*/
 int main( int argc, char *argv[] )
 {
-	unsigned rv = 1;
-	CU_pSuite suite = NULL;
-	// int len=0;
-	printf("argc %d \n", argc );
-	if(argv[1] !=NULL)
+	if(!parse_commandline_arguments(argc, argv))
 	{
-		url = strdup(argv[1]);
-	}
-	// Read url from file
-	//readFromFile(FILE_URL, &url, &len );
-	if(url !=NULL && strlen(url)==0)
-	{
-		printf("<url> is NULL.. add url in /tmp/webcfg_url file\n");
 		return 0;
 	}
-	printf("url fetched %s\n", url);
-	if(argv[2] !=NULL)
-	{
-		interface = strdup(argv[2]);
-	}
+	unsigned rv = 1;
+	CU_pSuite suite = NULL;
 	if( CUE_SUCCESS == CU_initialize_registry() ) {
 	add_suites( &suite );
 

@@ -13,52 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __WEBCFG_H__
-#define __WEBCFG_H__
+#ifndef __WEBCFG_UTIL_H__
+#define __WEBCFG_UTIL_H__
 
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
-#include "webcfg_util.h"
+#include <time.h>
+#include <stdio.h>
+
 /*----------------------------------------------------------------------------*/
 /*                                   Macros                                   */
 /*----------------------------------------------------------------------------*/
-#define MAX_BUF_SIZE	           256
-#define MAX_PARAMETERNAME_LENGTH       512
-#define BACKOFF_SLEEP_DELAY_SEC 	    10
+/* none */
 
-#define WEBCFG_FREE(__x__) if(__x__ != NULL) { free((void*)(__x__)); __x__ = NULL;} else {printf("Trying to free null pointer\n");}
-#ifndef TEST
-#define FOREVER()   1
-#else
-extern int numLoops;
-#define FOREVER()   numLoops--
-#endif
-
-int numLoops;
 /*----------------------------------------------------------------------------*/
 /*                               Data Structures                              */
 /*----------------------------------------------------------------------------*/
-typedef enum
-{
-    WEBCFG_SUCCESS = 0,
-    WEBCFG_FAILURE
-} WEBCFG_STATUS;
+
 /*----------------------------------------------------------------------------*/
 /*                             External Functions                             */
 /*----------------------------------------------------------------------------*/
-#ifdef MULTIPART_UTILITY
-int testUtility();
-int get_g_testfile();
-void set_g_testfile(int value);
-#endif
 
-bool get_global_shutdown();
-void set_global_shutdown(bool shutdown);
-pthread_cond_t *get_global_sync_condition(void);
-pthread_mutex_t *get_global_sync_mutex(void);
-
-void initWebConfigMultipartTask(unsigned long status);
-void processWebconfgSync(int Status);
-WEBCFG_STATUS webcfg_http_request(char **configData, int r_count, int status, long *code, char **transaction_id,char* contentType, size_t* dataSize);
+uint16_t generateTransactionId();
+int readFromFile(char *filename, char **data, int *len);
+int writeToFileData(char *db_file_path, char *data, size_t size);
+int writeToDBFile(char * db_file_path, char * data, size_t size);
+void webcfgStrncpy(char *destStr, const char *srcStr, size_t destSize);
+void getCurrent_Time(struct timespec *timer);
+long timeVal_Diff(struct timespec *starttime, struct timespec *finishtime);
+int writebase64ToDBFile(char *base64_file_path, char *data);
 #endif

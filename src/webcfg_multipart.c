@@ -34,8 +34,6 @@
 #define ETAG_HEADER 		       "Etag:"
 #define CURL_TIMEOUT_SEC	   25L
 #define CA_CERT_PATH 		   "/etc/ssl/certs/ca-certificates.crt"
-#define WEBPA_READ_HEADER          "/etc/parodus/parodus_read_file.sh"
-#define WEBPA_CREATE_HEADER        "/etc/parodus/parodus_create_file.sh"
 #define CCSP_CRASH_STATUS_CODE      192
 /*----------------------------------------------------------------------------*/
 /*                               Data Structures                              */
@@ -855,35 +853,6 @@ void loadInitURLFromFile(char **url)
 	{
 		WebcfgDebug("url fetched is %s\n", *url);
 	}
-}
-
-int readFromFile(char *filename, char **data, int *len)
-{
-	FILE *fp;
-	size_t sz;
-	int ch_count = 0;
-	fp = fopen(filename, "r+");
-	if (fp == NULL)
-	{
-		WebcfgError("Failed to open file %s\n", filename);
-		return 0;
-	}
-	fseek(fp, 0, SEEK_END);
-	ch_count = ftell(fp);
-	fseek(fp, 0, SEEK_SET);
-	*data = (char *) malloc(sizeof(char) * (ch_count + 1));
-	sz = fread(*data, 1, ch_count-1,fp);
-	if (!sz) 
-	{	
-		fclose(fp);
-		WebcfgError("fread failed.\n");
-		WEBCFG_FREE(*data);
-		return WEBCFG_FAILURE;
-	}
-	*len = ch_count;
-	(*data)[ch_count] ='\0';
-	fclose(fp);
-	return 1;
 }
 
 /* Traverse through db list to get docnames of all docs with root.

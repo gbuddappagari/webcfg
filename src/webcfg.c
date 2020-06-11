@@ -363,25 +363,6 @@ int handlehttpResponse(long response_code, char *webConfigData, int retry_count,
 	return 0;
 }
 
-void webcfgStrncpy(char *destStr, const char *srcStr, size_t destSize)
-{
-    strncpy(destStr, srcStr, destSize-1);
-    destStr[destSize-1] = '\0';
-}
-
-void getCurrent_Time(struct timespec *timer)
-{
-	clock_gettime(CLOCK_REALTIME, timer);
-}
-
-long timeVal_Diff(struct timespec *starttime, struct timespec *finishtime)
-{
-	long msec;
-	msec=(finishtime->tv_sec-starttime->tv_sec)*1000;
-	msec+=(finishtime->tv_nsec-starttime->tv_nsec)/1000000;
-	return msec;
-}
-
 #ifdef MULTIPART_UTILITY
 int testUtility()
 {

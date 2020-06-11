@@ -44,28 +44,6 @@ void webcfgPackUnpack();
 	}
 */
 
-int readFromFile(char *filename, char **data, int *len)
-{
-	FILE *fp;
-	int ch_count = 0;
-	fp = fopen(filename, "r+");
-	if (fp == NULL)
-	{
-		printf("Failed to open file %s\n", filename);
-		return 0;
-	}
-	fseek(fp, 0, SEEK_END);
-	ch_count = ftell(fp);
-	fseek(fp, 0, SEEK_SET);
-	*data = (char *) malloc(sizeof(char) * (ch_count + 1));
-	fread(*data, 1, ch_count,fp);
-        
-	*len = ch_count;
-	(*data)[ch_count] ='\0';
-	fclose(fp);
-	return 1;
-}
-
 int writeTofile(char *filename, char *data)
 {
 	FILE *fp;

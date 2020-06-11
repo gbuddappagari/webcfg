@@ -45,7 +45,6 @@ typedef struct {
 } multipart_t;
 
 
-int readFromFile(char *filename, char **data, int *len);
 WEBCFG_STATUS parseMultipartDocument(void *config_data, char *ct , size_t data_size, char* trans_uuid);
 void getConfigDocList(char *docList);
 void print_tmp_doc_list(size_t mp_count);

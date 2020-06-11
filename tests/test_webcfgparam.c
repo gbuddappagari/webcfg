@@ -18,31 +18,10 @@
 #include <errno.h>
 #include <stdio.h>
 #include <CUnit/Basic.h>
+#include "../src/webcfg_util.h"
 #include "../src/webcfg_param.h"
 
 #define WEB_CFG_FILE "../../tests/webcfg-now100.bin"
-int readFromFile(char **data, int *len)
-{
-	FILE *fp;
-	int ch_count = 0;
-	fp = fopen(WEB_CFG_FILE, "r+");
-	if (fp == NULL)
-	{
-		printf("Failed to open file %s. provide the file\n", WEB_CFG_FILE);
-		return 0;
-	}
-	fseek(fp, 0, SEEK_END);
-	ch_count = ftell(fp);
-	fseek(fp, 0, SEEK_SET);
-	*data = (char *) malloc(sizeof(char) * (ch_count + 1));
-	fread(*data, 1, ch_count,fp);
-        
-	*len = ch_count;
-	(*data)[ch_count] ='\0';
-	fclose(fp);
-	return 1;
-}
-
 void test_basic()
 {
 
@@ -52,7 +31,7 @@ void test_basic()
 	char *binfileData = NULL;
 	int status = -1;
 	printf("readFromFile\n");
-	status = readFromFile(&binfileData , &len);
+	status = readFromFile(WEB_CFG_FILE, &binfileData , &len);
 
 	printf("read status %d\n", status);
 	if(status)

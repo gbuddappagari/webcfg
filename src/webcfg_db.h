@@ -96,8 +96,6 @@ WEBCFG_STATUS initDB(char * db_file_path);
 
 WEBCFG_STATUS addNewDocEntry(size_t count);
 
-int writeToDBFile(char * db_file_path, char * data, size_t size);
-
 WEBCFG_STATUS generateBlob();
 
 blob_t * get_DB_BLOB();
@@ -133,8 +131,6 @@ char * get_DB_BLOB_base64();
 void checkDBList(char *docname, uint32_t version);
 
 WEBCFG_STATUS updateDBlist(char *docname, uint32_t version);
-
-int writebase64ToDBFile(char *base64_file_path, char *data);
 
 char * base64blobencoder(char * blob_data, size_t blob_size );
 
