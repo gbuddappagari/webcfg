@@ -99,10 +99,28 @@ COMMAND lcov -q --capture --directory
 ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/test_webcfgpack.dir/__/src --output-file test_webcfgpack.info
 COMMAND lcov -q --capture --directory 
 ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/test_webcfgparam.dir/__/src --output-file test_webcfgparam.info
+COMMAND lcov -q --capture --directory 
+${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/test_webcfgblob.dir/__/src --output-file test_webcfgblob.info
+COMMAND lcov -q --capture --directory 
+${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/test_multipart.dir/__/src --output-file test_multipart.info
+COMMAND lcov -q --capture --directory 
+${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/test_webcfgdb.dir/__/src --output-file test_webcfgdb.info
+COMMAND lcov -q --capture --directory 
+${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/test_notify.dir/__/src --output-file test_notify.info
+COMMAND lcov -q --capture --directory 
+${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/test_webcfg_auth.dir/__/src --output-file test_webcfg_auth.info
+COMMAND lcov -q --capture --directory 
+${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/test_events.dir/__/src --output-file test_events.info
 
 COMMAND lcov
 -a test_webcfgparam.info
 -a test_webcfgpack.info
+-a test_webcfgdb.info
+-a test_webcfgblob.info
+-a test_multipart.info
+-a test_webcfg_auth.info
+-a test_notify.info
+-a test_events.info
 --output-file coverage.info
 
 COMMAND genhtml coverage.info
