@@ -30,6 +30,7 @@
 #include <wdmp-c.h>
 #include <base64.h>
 #include "webcfg_db.h"
+#include "webcfg_client.h"
 /*----------------------------------------------------------------------------*/
 /*                                   Macros                                   */
 /*----------------------------------------------------------------------------*/
@@ -37,7 +38,7 @@
 
 #ifdef MULTIPART_UTILITY
 
-#define TEST_FILE_LOCATION		"/nvram/multipart.bin"
+#define TEST_FILE_LOCATION		"/tmp/multipart.bin"
 
 #endif
 /*----------------------------------------------------------------------------*/
@@ -92,6 +93,7 @@ void *WebConfigMultipartTask(void *status)
 
 	//start webconfig notification thread.
 	initWebConfigNotifyTask();
+	initWebConfigClient();
 	WebcfgInfo("initDB %s\n", WEBCFG_DB_FILE);
 
 	initDB(WEBCFG_DB_FILE);
