@@ -81,9 +81,18 @@ int send_aker_blob(char *blob, uint32_t blobSize, uint16_t docTransId, int versi
 	if(msg != NULL)
 	{
 		memset(msg, 0, sizeof(wrp_msg_t));
-		msg->msg_type = WRP_MSG_TYPE__UPDATE;
-		msg->u.crud.payload = blob;
-		msg->u.crud.payload_size = blobSize;
+		if(blobSize > 0)
+		{
+			msg->msg_type = WRP_MSG_TYPE__UPDATE;
+			msg->u.crud.payload = blob;
+			msg->u.crud.payload_size = blobSize;
+		}
+		else
+		{
+			msg->msg_type = WRP_MSG_TYPE__DELETE;
+			msg->u.crud.payload = NULL;
+			msg->u.crud.payload_size = 0;
+		}
 		snprintf(source, sizeof(source), "mac:%s/webcfg",get_deviceMAC());
 		WebcfgDebug("source: %s\n",source);
 		msg->u.crud.source = strdup(source);
@@ -213,7 +222,7 @@ void* parodus_receive()
 		{
 			WebcfgInfo("Message received with type %d\n",wrp_msg->msg_type);
 			WebcfgInfo("transaction_uuid %s\n", wrp_msg->u.crud.transaction_uuid );
-			if (wrp_msg->msg_type == WRP_MSG_TYPE__UPDATE)
+			if ((wrp_msg->msg_type == WRP_MSG_TYPE__UPDATE) ||(wrp_msg->msg_type == WRP_MSG_TYPE__DELETE))
 			{
 				sourceService = wrp_get_msg_element(WRP_ID_ELEMENT__SERVICE, wrp_msg, SOURCE);
 				WebcfgDebug("sourceService: %s\n",sourceService);
@@ -221,13 +230,18 @@ void* parodus_receive()
 				WebcfgDebug("sourceApplication: %s\n",sourceApplication);
 				if(sourceService != NULL && sourceApplication != NULL && strcmp(sourceService,"aker")== 0 && strcmp(sourceApplication,"schedule")== 0)
 				{
-					WebcfgInfo("Update response received from %s\n",sourceService);
+					WebcfgInfo("Response received from %s\n",sourceService);
 					payload = decodePayload(wrp_msg->u.crud.payload);
 					WebcfgDebug("payload = %s\n",payload);
 					WebcfgDebug("status: %d\n",wrp_msg->u.crud.status);
 					handleAkerStatus(wrp_msg->u.crud.status, payload);
 				}
 				wrp_free_struct (wrp_msg);
+			}
+			else if (wrp_msg->msg_type == WRP_MSG_TYPE__RETREIVE)
+			{
+				payload = decodePayload(wrp_msg->u.crud.payload);
+				WebcfgDebug("payload = %s\n",payload);
 			}
 		}
 	}
@@ -327,14 +341,19 @@ static void handleAkerStatus(int status, char *payload)
 {
 	char data[MAX_BUF_SIZE] = {0};
 	char *eventData = NULL;
-
-	if(status == 201)
+	switch(status)
 	{
-		snprintf(data,sizeof(data),"aker,%hu,%u,ACK,%u",akerTransId,akerDocVersion,0);
-	}
-	else
-	{
-		snprintf(data,sizeof(data),"aker,%hu,%u,NACK,%u,aker,%d,%s",akerTransId,akerDocVersion,0,status,payload);
+		case 201:
+		case 200:
+			snprintf(data,sizeof(data),"aker,%hu,%u,ACK,%u",akerTransId,akerDocVersion,0);
+		break;
+		case 534:
+		case 535:
+			snprintf(data,sizeof(data),"aker,%hu,%u,NACK,%u,aker,%d,%s",akerTransId,akerDocVersion,0,status,payload);
+		break;
+		default:
+			WebcfgError("Invalid status code %d\n",status);
+			return;
 	}
 	WebcfgDebug("data: %s\n",data);
 	eventData = strdup(data);
