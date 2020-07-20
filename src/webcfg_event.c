@@ -25,6 +25,7 @@
 #include "webcfg_db.h"
 #include "webcfg_param.h"
 #include "webcfg_blob.h"
+#include "webcfg_util.h"
 /*----------------------------------------------------------------------------*/
 /*                                   Macros                                   */
 /*----------------------------------------------------------------------------*/
@@ -875,11 +876,26 @@ WEBCFG_STATUS retryMultipartSubdoc(webconfig_tmp_data_t *docNode, char *docName)
 						if((ccspStatus == 192) || (ccspStatus == 204) || (ccspStatus == 191))
 						{
 							WebcfgError("ccspStatus is crash %d\n", ccspStatus);
-							snprintf(result,MAX_VALUE_LEN,"failed_retrying:%s", errDetails);
+							WEBCFG_STATUS subdocStatus = isSubDocSupported(gmp->entries[m].name_space);
+							if(ccspStatus == 204 && subdocStatus != WEBCFG_SUCCESS)
+							{
+								snprintf(result,MAX_VALUE_LEN,"doc_unsupported:%s", errDetails);
+							}
+							else
+							{
+								snprintf(result,MAX_VALUE_LEN,"failed_retrying:%s", errDetails);
+							}
 							WebcfgDebug("The result is %s\n",result);
 							updateTmpList(docNode, gmp->entries[m].name_space, gmp->entries[m].etag, "pending", result, ccspStatus, 0, 1);
 							addWebConfgNotifyMsg(gmp->entries[m].name_space, gmp->entries[m].etag, "pending", result, get_global_transID(), 0,"status",ccspStatus);
-							set_doc_fail(1);
+							if(ccspStatus == 204 && subdocStatus != WEBCFG_SUCCESS)
+							{
+								set_doc_fail(0);
+							}
+							else
+							{
+								set_doc_fail(1);
+							}
 							WebcfgDebug("the retry flag value is %d\n", get_doc_fail());
 						}
 						else
